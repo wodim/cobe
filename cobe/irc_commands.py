@@ -86,8 +86,12 @@ class IrcClient(irc.client.SimpleIRCClient):
             to = None
             text = msg.replace(my_nick, "")
 
-        # convert message to unicode
-        text = text.decode(self.encoding).strip()
+        # try to convert message to unicode
+        try:
+            text = text.decode(self.encoding).strip()
+        except UnicodeDecodeError as e:
+            conn.privmsg(event.target(), "%s: %s" % (user, e.reason))
+            return
 
         if not self.only_nicks or user in self.only_nicks:
             self.brain.train(text)
