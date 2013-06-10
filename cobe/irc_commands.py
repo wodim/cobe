@@ -3,6 +3,7 @@
 import irc.client
 import logging
 import re
+import random
 
 import cobe.brain
 
@@ -10,12 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class IrcClient(irc.client.SimpleIRCClient):
-    def __init__(self, brain, ignored_nicks=None, only_nicks=None):
+    def __init__(self, brain, encoding, random_replies, ignored_nicks=None, only_nicks=None):
         super(IrcClient, self).__init__()
 
         self.brain = brain
+        self.random_replies = random_replies
         self.ignored_nicks = set(ignored_nicks or [])
         self.only_nicks = set(only_nicks or [])
+        self.encoding = encoding
 
         self.channels = set()
 
@@ -83,12 +86,14 @@ class IrcClient(irc.client.SimpleIRCClient):
             text = msg
 
         # convert message to unicode
-        text = text.decode("utf-8").strip()
+        text = text.decode(self.encoding).strip()
 
         if not self.only_nicks or user in self.only_nicks:
             self.brain.train(text)
 
-        if to == conn.nickname:
+        rand = random.uniform(1, 100)
+
+        if to == conn.nickname or rand < self.random_replies:
             reply = self.brain.reply(text)
             conn.privmsg(event.target(), "%s: %s" % (user, reply))
 
@@ -103,11 +108,18 @@ class IrcClientCommand(object):
         subparser.add_argument("-o", "--only-nick", action="append",
                                dest="only_nicks",
                                help="Only learn from a specific nick.")
+        subparser.add_argument("-r", "--random-reply", type=float, default=0,
+                               dest="random_replies",
+                               help="Percentage of messages the bot will randomly reply to, even when not mentioned.")
 
         subparser.add_argument("-s", "--server", required=True,
                                help="IRC server hostname")
         subparser.add_argument("-p", "--port", type=int, default=6667,
                                help="IRC server port")
+        subparser.add_argument("-w", "--password",
+                               help="IRC server password")
+        subparser.add_argument("-e", "--encoding", default="utf-8",
+                               help="IRC server encoding")
         subparser.add_argument("-n", "--nick", default="cobe",
                                help="IRC nickname")
         subparser.add_argument("-c", "--channel", action="append",
@@ -119,8 +131,8 @@ class IrcClientCommand(object):
     def run(args):
         brain = cobe.brain.Brain("cobe.store")
 
-        client = IrcClient(brain, args.ignored_nicks, args.only_nicks)
-        client.connect(args.server, args.port, args.nick)
+        client = IrcClient(brain, args.encoding, args.random_replies, args.ignored_nicks, args.only_nicks)
+        client.connect(args.server, args.port, args.nick, args.password)
 
         for channel in args.channel:
             client.join(channel)
