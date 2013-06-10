@@ -61,6 +61,7 @@ class IrcClient(irc.client.SimpleIRCClient):
 
     def on_pubmsg(self, conn, event):
         user = irc.client.nm_to_n(event.source())
+        my_nick = conn.get_nickname()
 
         # ignore specified nicks
         if self.ignored_nicks and user in self.ignored_nicks:
@@ -83,7 +84,7 @@ class IrcClient(irc.client.SimpleIRCClient):
             text = match.group(2)
         else:
             to = None
-            text = msg
+            text = msg.replace(my_nick, "")
 
         # convert message to unicode
         text = text.decode(self.encoding).strip()
@@ -93,7 +94,7 @@ class IrcClient(irc.client.SimpleIRCClient):
 
         rand = random.uniform(1, 100)
 
-        if to == conn.nickname or rand < self.random_replies:
+        if my_nick in msg or rand < self.random_replies:
             reply = self.brain.reply(text)
             conn.privmsg(event.target(), "%s: %s" % (user, reply))
 
