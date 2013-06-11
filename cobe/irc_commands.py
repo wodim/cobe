@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class IrcClient(irc.client.SimpleIRCClient):
-    def __init__(self, brain, encoding, random_replies, ignored_nicks=None, only_nicks=None):
+    def __init__(self, brain, encoding, random_replies, deaf, ignored_nicks=None, only_nicks=None):
         super(IrcClient, self).__init__()
 
         self.brain = brain
         self.random_replies = random_replies
+        self.deaf = deaf
         self.ignored_nicks = set(ignored_nicks or [])
         self.only_nicks = set(only_nicks or [])
         self.encoding = encoding
@@ -94,7 +95,7 @@ class IrcClient(irc.client.SimpleIRCClient):
             conn.privmsg(event.target(), "%s: %s" % (user, e.reason))
             return
 
-        if not self.only_nicks or user in self.only_nicks:
+        if (not self.only_nicks or user in self.only_nicks) and (not self.deaf):
             self.brain.train(text)
 
         rand = random.uniform(1, 100)
@@ -117,6 +118,8 @@ class IrcClientCommand(object):
         subparser.add_argument("-r", "--random-reply", type=float, default=0,
                                dest="random_replies",
                                help="Percentage of messages the bot will randomly reply to, even when not mentioned.")
+        subparser.add_argument("-d", "--deaf", action="store_true",
+                               help="Don't learn anything new.")
 
         subparser.add_argument("-s", "--server", required=True,
                                help="IRC server hostname")
@@ -137,7 +140,7 @@ class IrcClientCommand(object):
     def run(args):
         brain = cobe.brain.Brain("cobe.store")
 
-        client = IrcClient(brain, args.encoding, args.random_replies, args.ignored_nicks, args.only_nicks)
+        client = IrcClient(brain, args.encoding, args.random_replies, args.deaf, args.ignored_nicks, args.only_nicks)
         client.connect(args.server, args.port, args.nick, args.password)
 
         for channel in args.channel:
