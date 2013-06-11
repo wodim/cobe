@@ -84,7 +84,8 @@ class IrcClient(irc.client.SimpleIRCClient):
             text = match.group(2)
         else:
             to = None
-            text = msg.replace(my_nick, "")
+            clean = re.compile(my_nick, re.IGNORECASE)
+            text = clean.sub("", msg)
 
         # try to convert message to unicode
         try:
@@ -98,7 +99,7 @@ class IrcClient(irc.client.SimpleIRCClient):
 
         rand = random.uniform(1, 100)
 
-        if my_nick in msg or rand < self.random_replies:
+        if my_nick.lower() in msg.lower() or rand < self.random_replies:
             reply = self.brain.reply(text)
             conn.privmsg(event.target(), "%s: %s" % (user, reply))
 
