@@ -18,7 +18,7 @@ setup(
     # setup_require nosetests, so that the nosetests command is
     # available immediately in a fresh checkout
     setup_requires=[
-        "nose==1.1.2"
+        "nose"
     ],
 
     test_suite="unittest2.collector",
@@ -32,7 +32,7 @@ setup(
     ],
 
     install_requires=[
-        "PyStemmer==1.2.0",
+        "PyStemmer==1.3.0",
         "argparse==1.2.1",
         "irc==3.0",
         "park==1.0"

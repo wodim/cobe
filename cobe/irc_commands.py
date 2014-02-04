@@ -92,7 +92,7 @@ class IrcClient(irc.client.SimpleIRCClient):
         try:
             text = text.decode(self.encoding).strip()
         except UnicodeDecodeError as e:
-            conn.privmsg(event.target(), "%s: %s" % (user, e.reason))
+            conn.privmsg(event.target(), "%s: UnicodeDecodeError exception: %s" % (user, e.reason))
             return
 
         if (not self.only_nicks or user in self.only_nicks) and (not self.deaf):

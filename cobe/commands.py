@@ -1,4 +1,5 @@
 # Copyright (C) 2012 Peter Teichman
+# -*- coding: utf-8 -*-
 
 import atexit
 import fileinput
@@ -8,6 +9,7 @@ import park
 import re
 import readline
 import sys
+import string
 
 from . import analysis
 
@@ -180,3 +182,25 @@ class ConsoleCommand:
 
             brain.train(text)
             print brain.reply(text)
+
+
+class OneLinerCommand:
+    @classmethod
+    def add_subparser(cls, parser):
+        subparser = parser.add_parser("oneliner", help="Dump one line and exit immediately")
+        subparser.set_defaults(run=cls.run)
+
+    @staticmethod
+    def run(args):
+        brain = Brain("cobe.store")
+        _reply = brain.reply(u'')
+        reply = u''
+
+        for i in _reply:
+            if i in string.ascii_letters + string.digits + u'áéíóúÁÉÍÓÚñÑlçÇ' + string.punctuation + ' ':
+                reply += i
+
+        if reply[-1] in string.ascii_lowercase and reply[-1] != '.':
+            reply += '.'
+
+        print reply

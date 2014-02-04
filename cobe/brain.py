@@ -69,9 +69,9 @@ class Brain(object):
 
             # Penalize longer replies (cobe 2.x compatibility)
             penalty = 1.0
-            if n_tokens > 16:
+            if n_tokens > 24:
                 penalty = math.sqrt(n_tokens)
-            elif n_tokens > 32:
+            elif n_tokens > 48:
                 penalty = n_tokens
 
             joined = join(reply)
